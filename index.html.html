@@ -1,0 +1,417 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>السراج لمستحضرات التجميل - AL-SERAG COSMETICS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+*{font-family:'Cairo',sans-serif}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-thumb{background:#D4AF37;border-radius:10px}
+.line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.no-scrollbar::-webkit-scrollbar{display:none}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.float{animation:float 4s ease-in-out infinite}
+</style>
+</head>
+<body class="bg-[#0a0a0a] text-white selection:bg-[#FF2D87] selection:text-white">
+<div id="root"></div>
+
+<!-- ADMIN PANEL - FULL CONTROL INSIDE ORIGINAL DESIGN -->
+<div id="adminPanel" class="fixed inset-0 bg-black/95 backdrop-blur-2xl z-[9999] hidden overflow-y-auto">
+<div class="min-h-screen p-2 md:p-4">
+<div class="max-w-[1400px] mx-auto bg-[#111] border-2 border-[#D4AF37] rounded-[24px] overflow-hidden shadow-[0_0_80px_rgba(212,175,55,0.2)]">
+<div class="bg-gradient-to-r from-[#FF2D87] to-[#D4AF37] p-4 flex justify-between items-center">
+<div>
+<div class="font-black text-xl text-white">⚙️ لوحة تحكم التاجر - نفس التصميم الجامد + تحكم كامل</div>
+<div class="text-white/90 text-[11px] mt-1">إضافة وحذف وتعديل من جوه المتجر - بدون ما تروح makers.edgeone.ai ولا أي موقع تاني</div>
+</div>
+<button onclick="closeAdmin()" class="bg-black/20 w-11 h-11 rounded-full text-white">✕</button>
+</div>
+
+<div id="cloudStatus" class="bg-[#0a0a0a] border-b border-[#222] p-3 text-center text-[11px]">
+<div id="cloudStatusText">☁️ جاري الاتصال...</div>
+</div>
+
+<div class="grid lg:grid-cols-[420px_1fr] gap-0">
+<div class="p-4 bg-[#0a0a0a] border-l border-[#222]">
+<h3 class="font-black text-[#D4AF37] mb-3 flex items-center gap-2"><span class="bg-[#D4AF37] text-black w-7 h-7 rounded-full grid place-items-center text-sm">1</span> إضافة منتج جديد</h3>
+<div class="space-y-3">
+<div>
+<label class="text-[11px] text-zinc-400 font-bold">📸 صورة المنتج - من موبايلك مباشرة</label>
+<div onclick="document.getElementById('imgInp').click()" class="mt-1 border-2 border-dashed border-[#D4AF37]/30 hover:border-[#D4AF37] rounded-[16px] p-5 text-center cursor-pointer bg-[#151515] transition">
+<div id="imgPlaceholder"><div class="text-3xl">📸</div><div class="text-[11px] text-zinc-400 mt-2 font-bold">دوس واختار الصورة من الاستوديو</div></div>
+<img id="imgPrev" class="hidden w-full h-[200px] object-cover rounded-[12px] mt-2">
+</div>
+<input type="file" id="imgInp" accept="image/*" class="hidden" onchange="handleImg(this)">
+</div>
+<input id="prodName" class="w-full bg-[#151515] border border-[#222] rounded-[12px] p-3 text-sm" placeholder="اسم المنتج">
+<div class="grid grid-cols-2 gap-2">
+<input id="prodPrice" type="number" class="bg-[#151515] border border-[#222] rounded-[12px] p-3 text-sm" placeholder="السعر الحالي">
+<input id="prodOld" type="number" class="bg-[#151515] border border-[#222] rounded-[12px] p-3 text-sm" placeholder="السعر القديم">
+</div>
+<div class="grid grid-cols-2 gap-2">
+<select id="prodCat" class="bg-[#151515] border border-[#222] rounded-[12px] p-3 text-sm"><option>مكياج</option><option>عناية بالبشرة</option><option>عطور</option><option>عناية بالشعر</option></select>
+<select id="prodBadge" class="bg-[#151515] border border-[#222] rounded-[12px] p-3 text-sm"><option>الأكثر مبيعاً</option><option>جديد</option><option>حصري</option><option>محدود</option><option>طبيعي 100%</option><option>عرض خاص</option><option>أورجانيك</option></select>
+</div>
+<textarea id="prodSpecs" class="w-full bg-[#151515] border border-[#222] rounded-[12px] p-3 text-sm h-[60px]" placeholder="المواصفات"></textarea>
+<button onclick="saveProd()" class="w-full bg-gradient-to-r from-[#FF2D87] to-[#D4AF37] py-3.5 rounded-full font-black">✅ حفظ - يظهر فوراً لكل العملاء</button>
+<button id="cancelEdit" onclick="cancelEdit()" class="w-full bg-[#222] py-2 rounded-full text-sm hidden">إلغاء التعديل</button>
+</div>
+</div>
+<div class="p-4 bg-[#111]">
+<div class="flex justify-between items-center mb-3">
+<h3 class="font-black">📦 إدارة المنتجات (<span id="prodCount">0</span>)</h3>
+<div class="flex gap-2"><button onclick="restoreOrig()" class="text-[10px] bg-[#222] px-3 py-1 rounded-full">🔄 الأصلي</button><button onclick="if(confirm('حذف الكل؟')){products=[];syncCloud();renderAdmin();renderStore();}" class="text-[10px] bg-[#222] px-3 py-1 rounded-full">حذف الكل</button></div>
+</div>
+<div id="prodGrid" class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-[600px] overflow-y-auto"></div>
+<div class="mt-4 bg-[#0a0a0a] border border-[#222] rounded-[12px] p-3 text-[10px] text-zinc-400 leading-5">
+<b class="text-[#D4AF37]">💡 كله من جوه المتجر بدون مواقع خارجية:</b><br>
+• الصورة من موبايلك مباشرة<br>
+• المنتج يظهر فوراً لكل العملاء بدون ما تروح EdgeOne<br>
+• نفس التصميم الجامد الأصلي بالدهبي
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+let BIN_ID = localStorage.getItem('alserag_bin_id_v2') || '';
+let products = [];
+let selectedCat = "الكل";
+let cartCount = 0;
+let showWheel = false;
+let wheelRotation = 0;
+let isSpinning = false;
+let wonDiscount = parseInt(localStorage.getItem('alserag_discount')||'0');
+let curImg = '';
+let editIdx = -1;
+let liveViewers = 12 + Math.floor(Math.random()*15);
+
+const defaultProducts = [
+{id:1,name:"روج مطفي فاخر - Velvet Kiss",category:"مكياج",price:250,oldPrice:380,image:"https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=600&h=600&fit=crop",badge:"الأكثر مبيعاً",rating:4.9,reviews:342,specs:"ثابت 24 ساعة - ضد الماء - ترطيب عالي"},
+{id:2,name:"سيروم فيتامين C الذهبي",category:"عناية بالبشرة",price:450,oldPrice:620,image:"https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=600&h=600&fit=crop",badge:"جديد",rating:5,reviews:189,specs:"تفتيح فوري - نضارة - يزيل البقع"},
+{id:3,name:"عطر ساحر - Midnight Rose",category:"عطور",price:650,oldPrice:950,image:"https://images.unsplash.com/photo-1594035910387-fea47794261f?w=600&h=600&fit=crop",badge:"حصري",rating:4.9,reviews:521,specs:"يدوم 48 ساعة - 100مل - فاخر"},
+{id:4,name:"فاونديشن تغطية كاملة HD",category:"مكياج",price:350,oldPrice:480,image:"https://images.unsplash.com/photo-1526045478515-99145907023c?w=600&h=600&fit=crop",badge:"محدود",rating:4.8,reviews:276,specs:"تغطية كاملة - HD - ضد الماء"},
+{id:5,name:"ماسكارا تكثيف فوري - Lash Queen",category:"مكياج",price:280,oldPrice:350,image:"https://images.unsplash.com/photo-1631214524020-7e18db9a8f92?w=600&h=600&fit=crop",badge:"الأكثر مبيعاً",rating:4.9,reviews:412,specs:"تكثيف فوري - ضد الماء"},
+{id:6,name:"كريم ترطيب ليلي بالكولاجين",category:"عناية بالبشرة",price:390,oldPrice:520,image:"https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600&h=600&fit=crop",badge:"طبيعي 100%",rating:4.8,reviews:198,specs:"بالكولاجين - ترطيب ليلي"},
+{id:7,name:"باليت ظلال عيون 18 لون",category:"مكياج",price:520,oldPrice:750,image:"https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=600&h=600&fit=crop",badge:"عرض خاص",rating:5,reviews:634,specs:"18 لون - ألوان قوية"},
+{id:8,name:"زيت أرغان مغربي للشعر",category:"عناية بالشعر",price:310,oldPrice:420,image:"https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?w=600&h=600&fit=crop",badge:"أورجانيك",rating:4.9,reviews:267,specs:"أرغان مغربي أصلي"}
+];
+
+const livePurchases = [
+{name:"سارة",city:"القاهرة",product:"روج مطفي"},
+{name:"منى",city:"المنصورة",product:"سيروم فيتامين C"},
+{name:"ياسمين",city:"الإسكندرية",product:"برفان فاخر"},
+{name:"نور",city:"الجيزة",product:"فاونديشن HD"},
+{name:"إسراء",city:"طنطا",product:"ماسكارا Lash Queen"}
+];
+
+async function init(){
+let local = JSON.parse(localStorage.getItem('alserag_products_final_v2')||'[]');
+if(BIN_ID){
+try{
+document.getElementById('cloudStatusText').innerHTML='☁️ بيحمل من السحابة...';
+let res=await fetch(`https://api.npoint.io/${BIN_ID}`);
+if(res.ok){
+let data=await res.json();
+if(data.products && data.products.length>0){
+products=data.products;
+localStorage.setItem('alserag_products_final_v2', JSON.stringify(products));
+document.getElementById('cloudStatusText').innerHTML=`✅ متصل بالسحابة - ${products.length} منتج - نفس التصميم الجامد + تحكم داخلي 100% بدون مواقع خارجية`;
+}else{products=local.length?local:defaultProducts;await syncCloud();}
+}else{products=local.length?local:defaultProducts;}
+}catch(e){products=local.length?local:defaultProducts;document.getElementById('cloudStatusText').innerHTML='⚠️ شغال local - كله من جوه المتجر';}
+}else{
+try{
+document.getElementById('cloudStatusText').innerHTML='🔧 بينشئ سحابة خاصة لمتجرك من جوه المتجر (نفس التصميم الجامد)...';
+products=local.length?local:defaultProducts;
+let res=await fetch('https://api.npoint.io',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({products:products,store:"AlSerag Original Gold"})});
+if(res.ok){
+let data=await res.json();
+if(data.id){BIN_ID=data.id;localStorage.setItem('alserag_bin_id_v2', BIN_ID);document.getElementById('cloudStatusText').innerHTML=`✅ سحابة خاصة اتعملت من جوه المتجر - ${products.length} منتج - نفس التصميم الجامد بالدهبي - بدون ما تروح أي موقع`;}
+}
+}catch(e){products=local.length?local:defaultProducts;document.getElementById('cloudStatusText').innerHTML='✅ شغال - نفس التصميم الجامد + تحكم داخلي';}
+}
+renderStore();
+renderAdmin();
+setInterval(()=>{liveViewers=12+Math.floor(Math.random()*15);let el=document.getElementById('liveViewers');if(el)el.innerText=liveViewers;},3000);
+}
+
+async function syncCloud(){
+localStorage.setItem('alserag_products_final_v2', JSON.stringify(products));
+if(!BIN_ID) return;
+try{
+document.getElementById('cloudStatusText').innerHTML='☁️ بيحفظ في السحابة...';
+await fetch(`https://api.npoint.io/${BIN_ID}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({products:products})});
+document.getElementById('cloudStatusText').innerHTML=`✅ اتحفظ - ${products.length} منتج منشور لكل العملاء فوراً - نفس التصميم الجامد`;
+}catch(e){document.getElementById('cloudStatusText').innerHTML='⚠️ اتحفظ local';}
+}
+
+function handleImg(input){
+if(input.files && input.files[0]){
+let reader=new FileReader();
+reader.onload=function(e){curImg=e.target.result;document.getElementById('imgPrev').src=curImg;document.getElementById('imgPrev').classList.remove('hidden');document.getElementById('imgPlaceholder').classList.add('hidden');};
+reader.readAsDataURL(input.files[0]);
+}
+}
+function saveProd(){
+let name=document.getElementById('prodName').value.trim();
+let price=parseInt(document.getElementById('prodPrice').value);
+let oldPrice=parseInt(document.getElementById('prodOld').value)||price;
+let cat=document.getElementById('prodCat').value;
+let badge=document.getElementById('prodBadge').value;
+let specs=document.getElementById('prodSpecs').value.trim();
+if(!name||!price){alert('اكتب الاسم والسعر');return;}
+if(!curImg && editIdx===-1){alert('اختار صورة');return;}
+let prod={id:Date.now(),name,price,oldPrice,category:cat,badge,specs,rating:4.9,reviews:Math.floor(Math.random()*400+50),image:curImg||(editIdx>=0?products[editIdx].image:'')};
+if(editIdx>=0){products[editIdx]=prod;editIdx=-1;document.getElementById('cancelEdit').classList.add('hidden');}
+else{products.unshift(prod);}
+document.getElementById('prodName').value='';document.getElementById('prodPrice').value='';document.getElementById('prodOld').value='';document.getElementById('prodSpecs').value='';
+curImg='';document.getElementById('imgPrev').classList.add('hidden');document.getElementById('imgPlaceholder').classList.remove('hidden');document.getElementById('imgInp').value='';
+syncCloud();renderAdmin();renderStore();
+}
+function editProd(i){
+let p=products[i];
+document.getElementById('prodName').value=p.name;
+document.getElementById('prodPrice').value=p.price;
+document.getElementById('prodOld').value=p.oldPrice;
+document.getElementById('prodCat').value=p.category;
+document.getElementById('prodBadge').value=p.badge;
+document.getElementById('prodSpecs').value=p.specs||'';
+curImg=p.image;
+document.getElementById('imgPrev').src=p.image;
+document.getElementById('imgPrev').classList.remove('hidden');
+document.getElementById('imgPlaceholder').classList.add('hidden');
+editIdx=i;
+document.getElementById('cancelEdit').classList.remove('hidden');
+}
+function cancelEdit(){editIdx=-1;document.getElementById('prodName').value='';document.getElementById('prodPrice').value='';document.getElementById('prodOld').value='';document.getElementById('prodSpecs').value='';curImg='';document.getElementById('imgPrev').classList.add('hidden');document.getElementById('imgPlaceholder').classList.remove('hidden');document.getElementById('cancelEdit').classList.add('hidden');}
+function deleteProd(i){if(confirm('تحذف المنتج؟')){products.splice(i,1);syncCloud();renderAdmin();renderStore();}}
+function restoreOrig(){if(confirm('ترجع المنتجات الأصلية الجامدة؟')){products=[...defaultProducts];syncCloud();renderAdmin();renderStore();}}
+
+function renderAdmin(){
+document.getElementById('prodCount').innerText=products.length;
+let grid=document.getElementById('prodGrid');grid.innerHTML='';
+products.forEach((p,i)=>{
+grid.innerHTML+=`<div class="bg-[#0a0a0a] border border-white/5 rounded-[12px] p-2"><img src="${p.image}" class="w-full h-[100px] object-cover rounded-[8px]"><div class="text-[11px] font-bold mt-1 truncate">${p.name}</div><div class="text-[#D4AF37] text-xs font-black">${p.price}ج</div><div class="flex gap-1 mt-1"><button onclick="editProd(${i})" class="flex-1 bg-zinc-800 text-[10px] py-1 rounded-full">تعديل</button><button onclick="deleteProd(${i})" class="flex-1 bg-[#FF2D87]/20 text-[#FF2D87] text-[10px] py-1 rounded-full">حذف</button></div></div>`;
+});
+}
+
+function waLink(name,price){
+let code=wonDiscount?` وكود خصم ${wonDiscount}% من عجلة الحظ`:'';
+return `https://wa.me/201068320014?text=${encodeURIComponent(`مرحبا السراج لمستحضرات التجميل ✨\nأريد طلب: ${name}${price? ' - '+price+' جنيه':''}${code}\n\nالاسم:\nالعنوان:\nرقم الهاتف:`)}`;
+}
+
+function renderStore(){
+let cats=["الكل","مكياج","عناية بالبشرة","عطور","عناية بالشعر"];
+let filtered=selectedCat==="الكل"?products:products.filter(p=>p.category===selectedCat);
+let randomLive = livePurchases[Math.floor(Math.random()*livePurchases.length)];
+
+let html=`
+<!-- Top Bar Gold -->
+<div class="bg-[#111] border-b border-[#D4AF37]/20 text-center py-2.5 px-4 text-[12px] md:text-[13px] tracking-wide">
+<div class="flex items-center justify-center gap-2 md:gap-6 flex-wrap">
+<span class="flex items-center gap-2"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span><span class="text-[#D4AF37] font-bold">توصيل مجاني</span><span class="text-zinc-300">لجميع أنحاء مصر</span></span>
+<span class="hidden md:block w-px h-3 bg-zinc-700"></span>
+<a href="https://wa.me/201068320014" class="text-zinc-300 hover:text-white transition flex items-center gap-1.5"><span>واتساب</span><span class="font-mono text-white font-bold tracking-wider">01068320014</span><span class="text-[10px] bg-[#25D366] text-white px-1.5 py-0.5 rounded-full">متصل الآن</span></a>
+<span class="hidden md:flex items-center gap-1 text-zinc-400"><span>• الدفع عند الاستلام</span><span>• منتجات أصلية 100%</span></span>
+</div>
+</div>
+
+<!-- Header Original Gold -->
+<header class="sticky top-0 z-40 bg-black/80 backdrop-blur-xl border-b border-white/5">
+<div class="max-w-[1280px] mx-auto px-4 md:px-6 py-3.5 flex items-center justify-between gap-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 md:w-11 md:h-11 rounded-[12px] bg-gradient-to-br from-[#FF2D87] to-[#D4AF37] p-[1.5px]"><div class="w-full h-full rounded-[10px] bg-black flex items-center justify-center font-black text-[18px] text-[#D4AF37]">س</div></div>
+<div><h1 class="font-black text-[16px] md:text-[19px] leading-none tracking-tight">السراج</h1><p class="text-[10px] md:text-[11px] text-[#D4AF37] tracking-[0.2em] font-semibold mt-0.5">AL-SERAG COSMETICS</p></div>
+</div>
+<nav class="hidden lg:flex items-center gap-7 text-[13px] font-medium text-zinc-400">
+<a class="text-white border-b border-[#D4AF37] pb-1" href="#">الرئيسية</a>
+<a class="hover:text-white transition" href="#products">المتجر</a>
+<a class="hover:text-white transition" href="#">الأكثر مبيعاً</a>
+<a class="hover:text-white transition" href="#">تواصل</a>
+</nav>
+<div class="flex items-center gap-2 md:gap-3">
+<a href="${waLink('استفسار عام')}" class="hidden md:flex items-center gap-2 bg-white text-black px-4 py-2 rounded-full text-[13px] font-bold hover:bg-zinc-100 transition"><span>اطلبي الآن</span><span class="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[11px]">↗</span></a>
+<button onclick="openAdmin()" class="bg-[#1a1a1a] border border-[#D4AF37]/30 hover:border-[#D4AF37] w-10 h-10 rounded-full grid place-items-center transition">⚙️</button>
+<div class="relative w-9 h-9 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center"><span class="text-[16px]">🛒</span><span class="absolute -top-1 -right-1 w-5 h-5 bg-[#FF2D87] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-black">${cartCount}</span></div>
+</div>
+</div>
+</header>
+
+<!-- Hero Original Gold -->
+<section class="relative overflow-hidden">
+<div class="absolute inset-0"><img src="https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=1400&h=900&fit=crop" alt="hero" class="w-full h-full object-cover opacity-60"><div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/70 to-black/30"></div><div class="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent"></div></div>
+<div class="relative max-w-[1280px] mx-auto px-4 md:px-6 py-10 md:py-20 flex flex-col lg:flex-row items-center gap-8 md:gap-12">
+<div class="flex-1 max-w-[640px]">
+<div class="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/10 rounded-full px-3 py-1.5 text-[11px] mb-5"><span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span><span class="text-zinc-200">+1,247 سيدة اشترت هذا الأسبوع • تقييم 4.9/5 • تحكم كامل من جوه المتجر ⚙️</span></div>
+<h2 class="text-[38px] md:text-[64px] font-black leading-[0.95] tracking-tight">جمالك يبدأ<br><span class="bg-gradient-to-l from-[#FF2D87] to-[#D4AF37] bg-clip-text text-transparent">من السراج</span></h2>
+<p class="mt-4 md:mt-6 text-[14px] md:text-[16px] leading-7 text-zinc-300 max-w-[520px]">تشكيلة فاخرة مختارة بعناية من المكياج والعناية والبرفيوم الأصلي. توصيل سريع والدفع عند الاستلام في كل محافظات مصر. <span class="text-[#D4AF37] font-bold">تحكم كامل للتاجر من جوه المتجر بدون مواقع خارجية.</span></p>
+<div class="mt-6 md:mt-8 flex flex-wrap gap-3">
+<a href="#products" class="bg-[#FF2D87] hover:bg-[#ff3a8a] transition text-white px-7 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2 shadow-[0_0_30px_rgba(255,45,135,0.4)]">تسوقي الآن <span>←</span></a>
+<button onclick="openAdmin()" class="bg-white/10 backdrop-blur border border-white/15 hover:bg-white/15 transition px-6 py-3.5 rounded-full font-bold text-[14px] flex items-center gap-2">⚙️ تحكم التاجر من جوه المتجر</button>
+</div>
+<div class="mt-8 grid grid-cols-3 gap-4 max-w-[420px]">
+<div class="bg-white/[0.06] border border-white/10 rounded-2xl p-3.5"><div class="text-[18px] font-black text-[#D4AF37]">+15K</div><div class="text-[11px] text-zinc-400 mt-1">عميلة سعيدة</div></div>
+<div class="bg-white/[0.06] border border-white/10 rounded-2xl p-3.5"><div class="text-[18px] font-black text-[#D4AF37]">100%</div><div class="text-[11px] text-zinc-400 mt-1">أصلي ومرخص</div></div>
+<div class="bg-white/[0.06] border border-white/10 rounded-2xl p-3.5"><div class="text-[18px] font-black text-[#D4AF37]">24H</div><div class="text-[11px] text-zinc-400 mt-1">توصيل سريع</div></div>
+</div>
+</div>
+<div class="flex-1 w-full lg:max-w-[520px]">
+<div class="relative bg-gradient-to-br from-zinc-900 to-black border border-white/10 rounded-[28px] p-3 md:p-4 shadow-2xl">
+<div class="rounded-[20px] overflow-hidden bg-[#111] border border-white/5">
+<div class="flex items-center justify-between px-4 py-3 border-b border-white/5"><span class="text-[12px] text-zinc-400">عرض اليوم ينتهي خلال</span><div class="flex gap-1.5"><div class="flex flex-col items-center"><div class="w-9 h-8 rounded-lg bg-[#FF2D87] text-white font-black text-[14px] flex items-center justify-center">${String(new Date().getHours()).padStart(2,'0')}</div><span class="text-[9px] text-zinc-500 mt-1">ساعة</span></div><div class="flex flex-col items-center"><div class="w-9 h-8 rounded-lg bg-[#FF2D87] text-white font-black text-[14px] flex items-center justify-center">${String(new Date().getMinutes()).padStart(2,'0')}</div><span class="text-[9px] text-zinc-500 mt-1">دقيقة</span></div></div></div>
+<div class="p-4">
+<div class="aspect-[4/3] rounded-xl overflow-hidden bg-zinc-900 relative"><img src="https://images.unsplash.com/photo-1526045478515-99145907023c?w=800&h=600&fit=crop" class="w-full h-full object-cover"><div class="absolute bottom-2 right-2 bg-black/70 backdrop-blur px-3 py-1.5 rounded-full text-[11px] border border-white/10">👁️ <span id="liveViewers">${liveViewers}</span> يشاهدن الآن</div><div class="absolute top-2 left-2 bg-[#D4AF37] text-black text-[11px] font-black px-2.5 py-1 rounded-full">خصم حتى 40%</div></div>
+<div class="mt-4 flex items-center justify-between"><div><div class="font-bold text-[15px]">بوكس الجمال المتكامل</div><div class="text-[12px] text-zinc-400 mt-1">4 منتجات بسعر 3 • الأكثر طلباً</div></div><a href="${waLink('بوكس الجمال المتكامل',999)}" class="bg-white text-black px-4 py-2 rounded-full text-[12px] font-bold">اطلبيه الآن</a></div>
+</div>
+</div>
+</div>
+<div class="absolute -bottom-6 -left-6 w-32 h-32 bg-[#FF2D87]/20 blur-[30px] rounded-full"></div>
+<div class="absolute -top-6 -right-6 w-32 h-32 bg-[#D4AF37]/20 blur-[30px] rounded-full"></div>
+</div>
+</div>
+</section>
+
+<!-- Features Bar -->
+<div class="relative border-y border-white/5 bg-black/40 backdrop-blur">
+<div class="max-w-[1280px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-center md:justify-between gap-3 text-[11px] text-zinc-400">
+<span class="flex items-center gap-2"><span class="text-[#D4AF37]">✓</span> منتجات أصلية 100% بفاتورة</span>
+<span class="flex items-center gap-2"><span class="text-[#D4AF37]">✓</span> توصيل خلال 24-48 ساعة</span>
+<span class="flex items-center gap-2"><span class="text-[#D4AF37]">✓</span> استرجاع مجاني خلال 14 يوم</span>
+<span class="flex items-center gap-2"><span class="text-[#D4AF37]">✓</span> دفع آمن عند الاستلام</span>
+<span class="flex items-center gap-1.5"><span>⭐⭐⭐⭐⭐</span><span class="text-white font-bold">4.9/5 من 2,431 تقييم</span></span>
+</div>
+</div>
+
+<!-- Categories Original -->
+<div class="max-w-[1280px] mx-auto px-4 md:px-6 py-6">
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+${["الكل","مكياج","عناية بالبشرة","عطور","عناية بالشعر"].map(c=>`<button onclick="selectedCat='${c}';renderStore()" class="whitespace-nowrap px-5 py-2.5 rounded-full text-[13px] font-bold border transition ${selectedCat===c?'bg-white text-black border-white shadow':'bg-zinc-900 text-zinc-300 border-white/10 hover:bg-zinc-800'}">${c}</button>`).join('')}
+<div class="mr-auto hidden md:flex items-center gap-2 text-[11px] text-zinc-500"><span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span><span>${filtered.length} منتجات فاخرة متوفرة الآن - تحكم داخلي 100%</span></div>
+</div>
+</div>
+
+<!-- Products Original Gold Design -->
+<section id="products" class="max-w-[1280px] mx-auto px-4 md:px-6 pb-16">
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+${filtered.map(p=>`
+<div class="group relative bg-[#141414] border border-white/[0.07] rounded-[20px] md:rounded-[24px] overflow-hidden hover:border-[#D4AF37]/30 transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] hover:-translate-y-1">
+<div class="absolute top-2.5 right-2.5 z-10 flex flex-col gap-1.5"><span class="bg-[#FF2D87] text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow">${p.badge}</span><span class="bg-black/70 backdrop-blur border border-white/10 text-white text-[10px] px-2.5 py-1 rounded-full">خصم ${Math.round((1-p.price/p.oldPrice)*100)}%</span></div>
+<div class="absolute top-2.5 left-2.5 z-10 bg-black/60 backdrop-blur border border-white/10 rounded-full px-2 py-1 flex items-center gap-1 text-[10px]"><span class="text-[#D4AF37]">★</span><span class="font-bold">${p.rating}</span><span class="text-zinc-400">(${p.reviews})</span></div>
+<div class="aspect-square bg-zinc-900 relative overflow-hidden"><img src="${p.image}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-700"><div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition"></div></div>
+<div class="p-3 md:p-4">
+<div class="text-[10px] tracking-wide text-[#D4AF37] font-bold">${p.category}</div>
+<h3 class="mt-1 font-bold text-[13px] md:text-[14px] leading-5 line-clamp-2 min-h-[40px]">${p.name}</h3>
+<div class="text-[11px] text-zinc-400 mt-1 truncate">${p.specs||''}</div>
+<div class="mt-3 flex items-end justify-between gap-2">
+<div><div class="flex items-baseline gap-2"><span class="text-[18px] md:text-[20px] font-black">${p.price}</span><span class="text-[11px]">ج.م</span><span class="text-[11px] text-zinc-500 line-through">${p.oldPrice}</span></div><div class="text-[10px] text-emerald-400 mt-1 font-medium">وفرى ${p.oldPrice-p.price} جنيه اليوم</div></div><div class="w-8 h-8 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-[14px]">♡</div></div>
+<a href="${waLink(p.name,p.price)}" onclick="cartCount++;renderStore()" class="mt-3.5 w-full bg-white text-black hover:bg-[#FF2D87] hover:text-white transition-colors font-black text-[12px] md:text-[13px] py-3 rounded-full flex items-center justify-center gap-2"><span>اطلبي عبر واتساب</span><span class="w-5 h-5 rounded-full bg-black text-white group-hover:bg-white group-hover:text-black flex items-center justify-center text-[10px] transition-colors">↗</span></a>
+<div class="mt-2.5 flex items-center justify-center gap-1.5 text-[10px] text-zinc-500"><span class="w-3 h-3 rounded-full bg-[#25D366] flex items-center justify-center text-[8px] text-white">✓</span><span>رد فوري على واتساب خلال دقيقتين</span></div>
+</div>
+</div>
+`).join('')}
+</div>
+</section>
+
+<!-- Admin Trigger Gold -->
+<div class="fixed bottom-5 left-5 flex flex-col gap-3 z-40"><button onclick="openQR()" class="bg-white border-2 border-[#D4AF37] w-14 h-14 rounded-full grid place-items-center text-xl shadow-[0_0_20px_rgba(0,0,0,0.3)] hover:scale-105 transition">📱</button><button onclick="openAdmin()" class="bg-[#111] border-2 border-[#D4AF37]/50 hover:border-[#D4AF37] w-14 h-14 rounded-full grid place-items-center text-xl shadow-[0_0_30px_rgba(212,175,55,0.2)] hover:shadow-[0_0_40px_rgba(212,175,55,0.4)] transition-all">⚙️</button></div>
+<div class="fixed bottom-5 right-5 bg-white text-black px-4 py-2 rounded-full text-[11px] font-black shadow-xl z-40 flex items-center gap-2"><span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> 01068320014 - ${products.length} منتج - نفس التصميم الجامد ${wonDiscount?`- خصم ${wonDiscount}%`:''}</div>
+<div class="fixed bottom-20 left-5 bg-black/80 backdrop-blur border border-white/10 px-3 py-1.5 rounded-full text-[10px] text-zinc-400 z-40 hidden md:block">⚙️ دوس هنا للتحكم الكامل من جوه المتجر - بدون مواقع خارجية</div>
+
+<!-- Wheel Modal Original -->
+${showWheel?`
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+<div class="relative w-full max-w-[420px] bg-[#151515] border border-[#D4AF37]/30 rounded-[28px] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+<button onclick="showWheel=false;renderStore()" class="absolute top-3 left-3 w-8 h-8 rounded-full bg-white/10 hover:bg-white/15 border border-white/10 flex items-center justify-center z-10">✕</button>
+<div class="p-6 md:p-7 text-center">
+${!wonDiscount?`
+<div class="inline-flex items-center gap-2 bg-[#D4AF37]/15 border border-[#D4AF37]/30 text-[#D4AF37] text-[11px] font-bold px-3 py-1 rounded-full">🎁 هدية حصرية لكِ</div>
+<h3 class="mt-4 font-black text-[22px] leading-7">دوري العجلة واكسبي<br>خصم يصل حتى 40%</h3>
+<p class="text-[12px] text-zinc-400 mt-2">لفة واحدة مجانية لكل زائرة اليوم</p>
+<div class="relative mt-6 mx-auto w-[260px] h-[260px]">
+<div class="absolute -inset-3 rounded-full bg-gradient-to-br from-[#FF2D87]/30 to-[#D4AF37]/30 blur-xl"></div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full -mt-2 w-0 h-0 border-l-[10px] border-r-[10px] border-b-[18px] border-l-transparent border-r-transparent border-b-white z-20 drop-shadow"></div>
+<div class="relative w-full h-full rounded-full border-[8px] border-[#1f1f1f] shadow-inner overflow-hidden" style="transform:rotate(${wheelRotation}deg);transition:${isSpinning?'transform 3.5s cubic-bezier(0.15,0.85,0.25,1)':'none'}">
+${[{v:10,c:"#111"},{v:40,c:"#FF2D87"},{v:15,c:"#1a1a1a"},{v:30,c:"#D4AF37"},{v:20,c:"#111"},{v:25,c:"#2a2a2a"}].map((x,i)=>`<div class="absolute top-1/2 left-1/2 w-1/2 h-1/2 origin-left" style="transform:rotate(${i*60}deg);background:${x.c}"><span class="absolute left-10 top-4 font-black text-[18px] text-white" style="transform:rotate(30deg)">${x.v}%</span></div>`).join('')}
+</div>
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white shadow-xl border-4 border-[#1f1f1f] flex items-center justify-center font-black text-black">س</div>
+</div>
+<button onclick="spinWheel()" ${isSpinning?'disabled':''} class="mt-6 w-full bg-gradient-to-l from-[#FF2D87] to-[#D4AF37] text-white font-black py-3.5 rounded-full text-[14px] shadow-[0_10px_30px_rgba(255,45,135,0.4)] disabled:opacity-70">${isSpinning?'جاري الدوران...':'دوري الآن واكسبي 🎉'}</button>
+<p class="text-[10px] text-zinc-500 mt-3">تم استخدام العجلة بواسطة 1,842 سيدة اليوم</p>
+`:`<div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-[#FF2D87] to-[#D4AF37] flex items-center justify-center text-[34px] shadow-[0_0_30px_rgba(255,45,135,0.5)]">🎉</div><h3 class="mt-4 font-black text-[26px]">مبروك! كسبتي خصم ${wonDiscount}%</h3><p class="text-[13px] text-zinc-300 mt-2">تم حفظ كود الخصم تلقائياً، سيتم تطبيقه عند طلبك عبر واتساب</p><div class="mt-5 bg-white text-black rounded-2xl p-4 border border-[#D4AF37]/40"><div class="text-[11px] text-zinc-500">كود الخصم الخاص بك</div><div class="mt-1 font-mono font-black text-[22px] tracking-[0.2em]">SERAG${wonDiscount}</div><div class="mt-2 text-[11px] bg-black text-white inline-block px-3 py-1 rounded-full">صالح لمدة 24 ساعة فقط</div></div><a href="${waLink(`استخدام كود خصم ${wonDiscount}% - SERAG${wonDiscount}`)}" class="mt-5 block w-full bg-white text-black font-black py-3.5 rounded-full text-[14px]">استخدمي الخصم الآن عبر واتساب ←</a><button onclick="showWheel=false;renderStore()" class="mt-3 text-[12px] text-zinc-500 underline">لاحقاً</button>`}
+</div>
+<div class="bg-black/40 border-t border-white/5 px-6 py-3 flex items-center justify-center gap-2 text-[10px] text-zinc-500"><span>🔒 آمن ومجاني</span><span>•</span><span>بدون بيانات بنكية</span></div>
+</div>
+</div>
+`:''}
+
+<!-- Live Purchase Notification Original -->
+<div id="liveNotif" class="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-40 transition-all duration-500 translate-y-0 opacity-100">
+<div class="bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl p-3 pr-4 flex gap-3 min-w-[280px] max-w-[320px]">
+<div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#FF2D87] to-[#D4AF37] flex items-center justify-center font-bold text-[13px] text-white">${randomLive.name[0]}</div>
+<div class="flex-1"><div class="text-[12px] leading-5"><span class="font-bold text-white">${randomLive.name} من ${randomLive.city}</span><span class="text-zinc-400"> اشترت </span><span class="font-bold text-[#D4AF37]">${randomLive.product}</span><span class="text-zinc-400"> الآن</span></div><div class="text-[10px] text-zinc-500 mt-0.5 flex items-center gap-1"><span class="w-1 h-1 bg-emerald-400 rounded-full animate-pulse"></span> منذ دقائق قليلة • تم التحقق</div></div>
+<div class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-1 rounded-full h-fit">مؤكد</div>
+</div>
+</div>
+</div>
+`;
+document.getElementById('root').innerHTML=html;
+}
+
+function spinWheel(){
+if(isSpinning) return;
+isSpinning=true;
+renderStore();
+let discounts=[10,15,20,25,30,40];
+let chosen=discounts[Math.floor(Math.random()*discounts.length)];
+let extra=1800+Math.random()*720;
+let idx=discounts.indexOf(chosen);
+let segment=360/discounts.length;
+let target=360-(idx*segment+segment/2);
+wheelRotation+=extra+target;
+setTimeout(()=>{wonDiscount=chosen;localStorage.setItem('alserag_discount', chosen);isSpinning=false;renderStore();},3500);
+}
+
+
+function openQR(){document.getElementById('qrModal').classList.remove('hidden');}
+
+function openAdmin(){
+let pass=prompt('🔐 باسورد لوحة تحكم التاجر (نفس التصميم الجامد + تحكم داخلي 100%):');
+if(pass==='01068320014' || pass==='1234' || pass==='admin'){
+document.getElementById('adminPanel').classList.remove('hidden');
+renderAdmin();
+}else if(pass!==null){alert('الباسورد غلط - الباسورد هو 01068320014');}
+}
+function closeAdmin(){document.getElementById('adminPanel').classList.add('hidden');}
+
+init();
+</script>
+
+<!-- QR CODE MODAL -->
+<div id="qrModal" class="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[10000] hidden grid place-items-center p-4" onclick="this.classList.add('hidden')">
+<div class="bg-white rounded-[28px] p-6 max-w-[360px] w-full text-center shadow-[0_0_60px_rgba(212,175,55,0.3)]" onclick="event.stopPropagation()">
+<div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-[#FF2D87] to-[#D4AF37] grid place-items-center text-2xl mb-3">📱</div>
+<h3 class="font-black text-[20px] text-black">امسح الكود وادخل المتجر</h3>
+<p class="text-[12px] text-zinc-500 mt-1">السراج لمستحضرات التجميل</p>
+<div class="mt-4 bg-white border-2 border-[#D4AF37]/20 rounded-[20px] p-3">
+<img src="data:image/png;base64,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iDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgoxqTwCI1vf9pZdeOhqN9u7d+8tf/rLrusX6spRyRPefPJnxcACzEmfA4Xzwgx+8+OKLv/jFL95+++0vvfTS/v37F+vLI73/5MnUO59AA8QZcDinnnrqcccdt2XLlpNPPvnkk0/uum4RvzzS+0+eDMAhFYBDW7Nmzd69ey+55JLx50X88kjvP3kyS3HmgGb1xV99AA7t8ssv/9jHPnbiiSeORqM777yz67rF+vKBBx44ovtPnsx4OIBZ+deawOE8++yzu3fvvuyyy5599tm///3vi/jlkd5/8mTqnU+gAf7OGXA4jz322Dvf+c7f/va3e/fu3bJlS9d1i/jlkd5/8mQADsWvNQEAgvi1JgBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAQAEEWcAAEHEGQBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAbN74YUXHn744d27d9eeCMB0EWfQsHXr1k1+c8OGDQd9mKO77rqrlDLz4dZbb12+fPmyZYv2lBjP9rnnntu0adNi7fOgnc/FoZblxz/+8c0333zzzTffdNNNX/3qVxd93MWy9CMCS2xUewLAItuwYcPHP/7xAz/Mxb59+4455pi+72c+7Nq168ILL1z06Z100kknnXTSou927g61LF/4whfGH37/+9+/8sorSzspgP8hzqBtv/jFL3bu3PnPf/7zkksuWb169YMPPvjGG2+sX79+5cqV4w/r1q1bt27dhz/84aeeeqrv+6uvvnr79u2PPvpo13Wf+tSnHnnkkeuuu67rur/85S9nnHHGzIdNmzbt2bPn5ptvXrt27fXXX7969epTTz313HPPve+++1599dU333zz8ssvf/e73/36668f9J2Zie3atevOO+984403jjvuuKuuuuotb3nLzB+tW7du/fr1N95445e//OW3vvWt+/bt+/a3v/2tb33r/vvvn3VXP/zhD88999xVq1bdc889p59++plnnnn33Xe//vrrb3/727du3bp+/fqZn3zuuefuueee3bt3n3feeRdddNGuXbsO+smZ9fn85z8/605KKRs3bhyvydjkMR6425mDHX/nbW97244dO773ve/NutVBC7Ju3brzzz9/586du3fv/uQnP7l69epDrefkiJM/edB63nDDDX3fL9JVBiytAjTr2muvfeSRR0opL7zwwvXXXz/+5nXXXXfQh2uvvfbxxx8vpWzZsuWWW2752te+tnv37ueff/4nP/nJ7t27xz9z//33v/766wd+OHDzHTt2lFLuvPPOp556qpTyj3/844Ybbpj1OzNuu+22zZs3l1I2b958++23T07sV7/61caNG0spO3bsuPfeew+zq1deeeXGG298+umnv//975dSbr/99i1btpRS/vjHP37pS186cJ/33HPPk08++dprr33jG984/E/O+kellK1bt959990Hjj45scltJ78zudXkgsycvpdffnl8+g61CHPZ/0HrWYBmeXMGDSulfOhDH+q6bsWKFYf/m/urVq3quu7ss89+4IEH3v/+9//0pz89//zzr7nmmpkf2LNnz/HHH3/ghxnLli0788wzu67705/+9PLLL4+/+a9//Wv//v2T33nwwQd37tx54YUXPvnkk1dddVXXdeecc87Pf/7zySmdffbZ999//0c+8pFt27Z94AMfuO222w61q9WrV5977rm33HLLN7/5za7rnnzyySuvvLLrurPOOuugvxK3Zs2axx9/fPv27Xv27Dn8Tx7qjx555JHPfe5zB/7k5DFObjv5nVm3OmhBZk7fiSeeOD59k1vNff8HrefkggOtEGfQsNFodMIJJ4w/H+Z3WMuWLZvpj9FodPXVV//1r3/9zW9+89hjj41z4fnnn3/Xu9514IeDNh/v/M033/zKV76yfPnyUsrOnTuXLVs2+Z1LL710vNW99957+MmvWLHitdde27Nnz9/+9rcrrrjiMLvqum7Pnj3Lli174403uq7bt2/f+Jv79+8vpRy4zx/96EerV6++4IILxv/m4DA/OesfPf300yeccMKKFSsO/MnJiU1uO/mdya0OmkA32+mb3OpQs538yYPW8/CLDyTzrzWhYbMG2fit+IEf3nzzzR07dnRd98QTT6xcufK73/3uaaedds0112zfvn2cO9u2bTvrrLMO/DCr008/fevWrV3X7dix46GHHpr1OzPOOOOMJ554Yjzo+973vll3uGrVqg0bNrznPe/p+/4wu3rxxRf//Oc/r127dvzbupUrV45/cvy/B3rmmWfOOeecvXv3jmtm1p8cL8usf/Twww9/9KMfnflyvDiTE5vcdvI7k1tNLsjk6ZvcajyHuez/oPWcdcGBJnhzBkeb008//Qc/+MHatWtnPixfvvwPf/jDr3/96+OPP/7KK6/cvHnzd77znVLKJz7xiVtvvXXdunUvvvji+HXRzIdZfeYzn7n77rs3bdp0zDHHjH/3N/mdGWvWrLnrrrt+97vfHXvsseP3c+94xzseeuihiy++eOZnzj777BtuuGH8/1txmF397Gc/u+yyy0455ZSTTjrp0Ucf/fSnP33HHXds3LjxtNNOG43++yE23vn5559/0003nXLKKccff/y+fftm/cnxslxxxRUH/dFLL7306quvvve9750Zd7w4kxOb3O2B3zn22GNnPZzJBZnLCo/nMDnirMt14HoC7eon37QDR5nxv448zA/M8c1ZoP/voc3lJ+e+k0O54447LrroolNOOeWZZ5554IEHvv71rw/ZGzDlvDkDupkga6vMclxwwQX33Xff8uXL9+3b99nPfrb2dIC2eXMGABDEPwgAAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKMak8AaM1Z3+kueG93zLJu3/5u41+7rpvHl9u+NXQPR3qHi77/8R4A5kycAfP0/nd1/7Gy+/Sq7j//T/fKP7v9ZR5fDt/Dkd7hou8fYJ7EGTBP73xLd+wx3bbnuhX/3r3j37uum9+Xw/dwpHe46PsHmA9/5wyYv0/+r+62zd15py3ky+F7ONI7XPT9A8xHX0qpPQegKV/9eXfee7q3ntCNlnX/tb3runl8+b3Lhu7hSO9w0fc/3gPAnHlzBszTC7u6Pfu6//2+7oVd3Uv/d35fDt/Dkd7hou8fYJ78nTNgnnY83534b90Tz3b79nfbnuu6bn5fDt/Dkd7hou8fYD78WhMAIIhfawIABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAQAEEWcAAEHEGQBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAQAEEWcAAEHEGQBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEOT/ATmBFm3Bi+wzAAAAAElFTkSuQmCC" class="w-full h-auto rounded-[12px]">
+</div>
+<div class="mt-3 bg-[#111] text-white rounded-full px-4 py-2 text-[11px] font-mono">free-olive-xqlaqtq7.edgeone.dev</div>
+<div class="mt-4 flex gap-2">
+<a href="data:image/png;base64,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iDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgoxqTwCI1vf9pZdeOhqN9u7d+8tf/rLrusX6spRyRPefPJnxcACzEmfA4Xzwgx+8+OKLv/jFL95+++0vvfTS/v37F+vLI73/5MnUO59AA8QZcDinnnrqcccdt2XLlpNPPvnkk0/uum4RvzzS+0+eDMAhFYBDW7Nmzd69ey+55JLx50X88kjvP3kyS3HmgGb1xV99AA7t8ssv/9jHPnbiiSeORqM777yz67rF+vKBBx44ovtPnsx4OIBZ+deawOE8++yzu3fvvuyyy5599tm///3vi/jlkd5/8mTqnU+gAf7OGXA4jz322Dvf+c7f/va3e/fu3bJlS9d1i/jlkd5/8mQADsWvNQEAgvi1JgBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAQAEEWcAAEHEGQBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAbN74YUXHn744d27d9eeCMB0EWfQsHXr1k1+c8OGDQd9mKO77rqrlDLz4dZbb12+fPmyZYv2lBjP9rnnntu0adNi7fOgnc/FoZblxz/+8c0333zzzTffdNNNX/3qVxd93MWy9CMCS2xUewLAItuwYcPHP/7xAz/Mxb59+4455pi+72c+7Nq168ILL1z06Z100kknnXTSou927g61LF/4whfGH37/+9+/8sorSzspgP8hzqBtv/jFL3bu3PnPf/7zkksuWb169YMPPvjGG2+sX79+5cqV4w/r1q1bt27dhz/84aeeeqrv+6uvvnr79u2PPvpo13Wf+tSnHnnkkeuuu67rur/85S9nnHHGzIdNmzbt2bPn5ptvXrt27fXXX7969epTTz313HPPve+++1599dU333zz8ssvf/e73/36668f9J2Zie3atevOO+984403jjvuuKuuuuotb3nLzB+tW7du/fr1N95445e//OW3vvWt+/bt+/a3v/2tb33r/vvvn3VXP/zhD88999xVq1bdc889p59++plnnnn33Xe//vrrb3/727du3bp+/fqZn3zuuefuueee3bt3n3feeRdddNGuXbsO+smZ9fn85z8/605KKRs3bhyvydjkMR6425mDHX/nbW97244dO773ve/NutVBC7Ju3brzzz9/586du3fv/uQnP7l69epDrefkiJM/edB63nDDDX3fL9JVBiytAjTr2muvfeSRR0opL7zwwvXXXz/+5nXXXXfQh2uvvfbxxx8vpWzZsuWWW2752te+tnv37ueff/4nP/nJ7t27xz9z//33v/766wd+OHDzHTt2lFLuvPPOp556qpTyj3/844Ybbpj1OzNuu+22zZs3l1I2b958++23T07sV7/61caNG0spO3bsuPfeew+zq1deeeXGG298+umnv//975dSbr/99i1btpRS/vjHP37pS186cJ/33HPPk08++dprr33jG984/E/O+kellK1bt959990Hjj45scltJ78zudXkgsycvpdffnl8+g61CHPZ/0HrWYBmeXMGDSulfOhDH+q6bsWKFYf/m/urVq3quu7ss89+4IEH3v/+9//0pz89//zzr7nmmpkf2LNnz/HHH3/ghxnLli0788wzu67705/+9PLLL4+/+a9//Wv//v2T33nwwQd37tx54YUXPvnkk1dddVXXdeecc87Pf/7zySmdffbZ999//0c+8pFt27Z94AMfuO222w61q9WrV5977rm33HLLN7/5za7rnnzyySuvvLLrurPOOuugvxK3Zs2axx9/fPv27Xv27Dn8Tx7qjx555JHPfe5zB/7k5DFObjv5nVm3OmhBZk7fiSeeOD59k1vNff8HrefkggOtEGfQsNFodMIJJ4w/H+Z3WMuWLZvpj9FodPXVV//1r3/9zW9+89hjj41z4fnnn3/Xu9514IeDNh/v/M033/zKV76yfPnyUsrOnTuXLVs2+Z1LL710vNW99957+MmvWLHitdde27Nnz9/+9rcrrrjiMLvqum7Pnj3Lli174403uq7bt2/f+Jv79+8vpRy4zx/96EerV6++4IILxv/m4DA/OesfPf300yeccMKKFSsO/MnJiU1uO/mdya0OmkA32+mb3OpQs538yYPW8/CLDyTzrzWhYbMG2fit+IEf3nzzzR07dnRd98QTT6xcufK73/3uaaedds0112zfvn2cO9u2bTvrrLMO/DCr008/fevWrV3X7dix46GHHpr1OzPOOOOMJ554Yjzo+973vll3uGrVqg0bNrznPe/p+/4wu3rxxRf//Oc/r127dvzbupUrV45/cvy/B3rmmWfOOeecvXv3jmtm1p8cL8usf/Twww9/9KMfnflyvDiTE5vcdvI7k1tNLsjk6ZvcajyHuez/oPWcdcGBJnhzBkeb008//Qc/+MHatWtnPixfvvwPf/jDr3/96+OPP/7KK6/cvHnzd77znVLKJz7xiVtvvXXdunUvvvji+HXRzIdZfeYzn7n77rs3bdp0zDHHjH/3N/mdGWvWrLnrrrt+97vfHXvsseP3c+94xzseeuihiy++eOZnzj777BtuuGH8/1txmF397Gc/u+yyy0455ZSTTjrp0Ucf/fSnP33HHXds3LjxtNNOG43++yE23vn5559/0003nXLKKccff/y+fftm/cnxslxxxRUH/dFLL7306quvvve9750Zd7w4kxOb3O2B3zn22GNnPZzJBZnLCo/nMDnirMt14HoC7eon37QDR5nxv448zA/M8c1ZoP/voc3lJ+e+k0O54447LrroolNOOeWZZ5554IEHvv71rw/ZGzDlvDkDupkga6vMclxwwQX33Xff8uXL9+3b99nPfrb2dIC2eXMGABDEPwgAAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKIMwCAIOIMACCIOAMACCLOAACCiDMAgCDiDAAgiDgDAAgizgAAgogzAIAg4gwAIIg4AwAIIs4AAIKMak8AaM1Z3+kueG93zLJu3/5u41+7rpvHl9u+NXQPR3qHi77/8R4A5kycAfP0/nd1/7Gy+/Sq7j//T/fKP7v9ZR5fDt/Dkd7hou8fYJ7EGTBP73xLd+wx3bbnuhX/3r3j37uum9+Xw/dwpHe46PsHmA9/5wyYv0/+r+62zd15py3ky+F7ONI7XPT9A8xHX0qpPQegKV/9eXfee7q3ntCNlnX/tb3runl8+b3Lhu7hSO9w0fc/3gPAnHlzBszTC7u6Pfu6//2+7oVd3Uv/d35fDt/Dkd7hou8fYJ78nTNgnnY83534b90Tz3b79nfbnuu6bn5fDt/Dkd7hou8fYD78WhMAIIhfawIABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAQAEEWcAAEHEGQBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEEScAQAEEWcAAEHEGQBAEHEGABBEnAEABBFnAABBxBkAQBBxBgAQRJwBAAQRZwAAQcQZAEAQcQYAEOT/ATmBFm3Bi+wzAAAAAElFTkSuQmCC" download="AlSerag-QR.png" class="flex-1 bg-black text-white py-3 rounded-full font-bold text-sm">⬇️ حفظ QR</a>
+<button onclick="document.getElementById('qrModal').classList.add('hidden')" class="flex-1 bg-[#F5F5F5] text-black py-3 rounded-full font-bold text-sm">إغلاق</button>
+</div>
+<div class="mt-3 text-[10px] text-zinc-400">اطبعي الكود وحطيه على الباكدج والفلاير</div>
+</div>
+</div>
+
+</body>
+</html>
